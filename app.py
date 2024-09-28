@@ -33,10 +33,9 @@ def save_file(file):
 
 def chat_with_gemini(prompt, context=""):
     try:
-        # Prepare the request to the Gemini API
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
+        # Prepare the request to the Gemini API with API key as query parameter
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={GEMINI_API_KEY}"
         headers = {
-            "Authorization": f"Bearer {GEMINI_API_KEY}",
             "Content-Type": "application/json"
         }
         data = {
