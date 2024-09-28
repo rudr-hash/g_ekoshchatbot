@@ -36,7 +36,7 @@ def chat_with_gemini(prompt, context=""):
         # Prepare the request to the Gemini API
         endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
         headers = {
-            "Authorization": f"Bearer {AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU}",
+            "Authorization": f"Bearer {GEMINI_API_KEY}",
             "Content-Type": "application/json"
         }
         data = {
