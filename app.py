@@ -4,10 +4,9 @@ from PyPDF2 import PdfReader
 import docx
 import tempfile
 import requests
-from google.oauth2 import service_account
 
-# Path to your service account key file
-SERVICE_ACCOUNT_FILE = 'config/service_account.json'  # Adjust the path to match your folder structure
+# Your Gemini API key
+GEMINI_API_KEY = 'AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU'  # Replace with your Gemini API key
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -32,28 +31,12 @@ def save_file(file):
         tmp_file.write(file.getvalue())
         return tmp_file.name
 
-def get_access_token():
-    try:
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE,
-            scopes=["https://www.googleapis.com/auth/cloud-platform"],
-        )
-        access_token_info = credentials.refresh(requests.Request())
-        return access_token_info.token
-    except Exception as e:
-        st.error(f"Failed to obtain access token: {str(e)}")
-        return None
-
 def chat_with_gemini(prompt, context=""):
-    access_token = get_access_token()  # Get the OAuth 2.0 access token
-    if not access_token:
-        return "Failed to get access token."
-
     try:
         # Prepare the request to the Gemini API
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"  # Replace with your endpoint
+        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
         headers = {
-            "Authorization": f"Bearer {access_token}",
+            "Authorization": f"Bearer {AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU}",
             "Content-Type": "application/json"
         }
         data = {
