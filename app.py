@@ -7,7 +7,7 @@ import requests
 from google.oauth2 import service_account
 
 # Path to your service account key file
-SERVICE_ACCOUNT_FILE = '/Users/rudresh/Desktop/client_secret_29469650462-d2gvhh81hggr13sjsjuja4apcu6tsms5.apps.googleusercontent.com.json'  # Replace with your path
+SERVICE_ACCOUNT_FILE = 'config/service_account.json'  # Adjust the path to match your folder structure
 
 # Initialize session state
 if "messages" not in st.session_state:
