@@ -1,12 +1,15 @@
 import streamlit as st
+import os
 from google.cloud import aiplatform
 from PyPDF2 import PdfReader
 import docx
-import os
 import tempfile
 
 # Set up Google Cloud AI Platform (Gemini)
-# Ensure your GOOGLE_APPLICATION_CREDENTIALS environment variable is set to your service account key JSON file.
+# Set the API key as an environment variable
+os.environ["GOOGLE_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
+
+# Initialize the AI Platform with the project and location
 aiplatform.init(project='erudite-flag-353814', location='us-central1')  # Replace 'us-central1' with your location
 
 # Initialize session state
@@ -46,7 +49,8 @@ def chat_with_gemini(prompt, context=""):
         # Call the predict method
         response = client.predict(
             endpoint=endpoint,
-            instances=[instance]
+            instances=[instance],
+            parameters={"key": os.environ["GOOGLE_API_KEY"]}  # Use the API key
         )
 
         # Assuming response is structured correctly; adjust based on actual response structure
