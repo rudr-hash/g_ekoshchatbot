@@ -7,7 +7,7 @@ import tempfile
 
 # Set up Google Cloud AI Platform (Gemini)
 # Ensure your GOOGLE_APPLICATION_CREDENTIALS environment variable is set to your service account key JSON file.
-aiplatform.init(project='YOUR_PROJECT_ID', location='YOUR_LOCATION')
+aiplatform.init(project='erudite-flag-353814', location='us-central1')  # Replace 'us-central1' with your location
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -34,16 +34,23 @@ def save_file(file):
 
 def chat_with_gemini(prompt, context=""):
     try:
-        # Prepare your request to the Gemini API
-        response = aiplatform.gapic.PredictionServiceClient().predict(
-            endpoint="YOUR_ENDPOINT",  # Replace with your endpoint
-            instances=[
-                {"content": f"{context}\n\n{prompt}"}
-            ]
-        )
+        # Create a client for the PredictionService
+        client = aiplatform.gapic.PredictionServiceClient()
+
+        # Prepare the request
+        endpoint = "YOUR_ENDPOINT"  # Replace with your endpoint
+        instance = {
+            "content": f"{context}\n\n{prompt}"
+        }
         
-        # Assuming response is structured correctly
-        return response.predictions[0]['content']
+        # Call the predict method
+        response = client.predict(
+            endpoint=endpoint,
+            instances=[instance]
+        )
+
+        # Assuming response is structured correctly; adjust based on actual response structure
+        return response.predictions[0]  # Adjust based on response structure from Gemini API
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
