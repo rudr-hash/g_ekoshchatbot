@@ -1,16 +1,12 @@
 import streamlit as st
 import os
-from google.cloud import aiplatform
 from PyPDF2 import PdfReader
 import docx
 import tempfile
+import requests
 
-# Set up Google Cloud AI Platform (Gemini)
-# Set the API key as an environment variable
-os.environ["GOOGLE_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"
-
-# Initialize the AI Platform with the project and location
-aiplatform.init(project='erudite-flag-353814', location='us-central1')  # Replace 'us-central1' with your location
+# Set up the Gemini API key
+os.environ["GEMINI_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY"  # Replace with your Gemini API key
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -37,24 +33,25 @@ def save_file(file):
 
 def chat_with_gemini(prompt, context=""):
     try:
-        # Create a client for the PredictionService
-        client = aiplatform.gapic.PredictionServiceClient()
-
-        # Prepare the request
-        endpoint = "YOUR_ENDPOINT"  # Replace with your endpoint
-        instance = {
-            "content": f"{context}\n\n{prompt}"
+        # Prepare the request to the Gemini API
+        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY"  # Replace with your Gemini API endpoint
+        headers = {
+            "Authorization": f"Bearer {os.environ['AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY']}",
+            "Content-Type": "application/json"
         }
-        
-        # Call the predict method
-        response = client.predict(
-            endpoint=endpoint,
-            instances=[instance],
-            parameters={"key": os.environ["GOOGLE_API_KEY"]}  # Use the API key
-        )
+        data = {
+            "prompt": f"{context}\n\n{prompt}",
+            "max_tokens": 100  # Adjust as necessary
+        }
 
-        # Assuming response is structured correctly; adjust based on actual response structure
-        return response.predictions[0]  # Adjust based on response structure from Gemini API
+        # Call the Gemini API
+        response = requests.post(endpoint, headers=headers, json=data)
+
+        # Check for a successful response
+        if response.status_code == 200:
+            return response.json().get("choices", [{}])[0].get("text", "No response text found.")
+        else:
+            return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
