@@ -1,13 +1,13 @@
 import streamlit as st
-import openai
+from google.cloud import aiplatform
 from PyPDF2 import PdfReader
 import docx
 import os
 import tempfile
 
-# Set up OpenAI API key from Streamlit secrets
-openai.api_key = "sk-svcacct-LU68P5zX6MGrTqjsViXIw_QEGVIarGnbJfny5vJfvnOEVRN31aoXfbzsSSfc5oGGaCxT3BlbkFJhZ1Fhthfx32HYjW_NvexJVOsT2azXyT-qX2RHVO_Uh45-opjosFK4MR2juXOUxijYAA"
-
+# Set up Google Cloud AI Platform (Gemini)
+# Ensure your GOOGLE_APPLICATION_CREDENTIALS environment variable is set to your service account key JSON file.
+aiplatform.init(project='YOUR_PROJECT_ID', location='YOUR_LOCATION')
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -32,19 +32,18 @@ def save_file(file):
         tmp_file.write(file.getvalue())
         return tmp_file.name
 
-def chat_with_gpt(message, context=""):
+def chat_with_gemini(prompt, context=""):
     try:
-        messages = [
-            {"role": "system", "content": "You are a helpful assistant for a university assignment submission system."},
-            {"role": "user", "content": f"Context: {context}\n\nUser question: {message}"}
-        ]
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages
+        # Prepare your request to the Gemini API
+        response = aiplatform.gapic.PredictionServiceClient().predict(
+            endpoint="YOUR_ENDPOINT",  # Replace with your endpoint
+            instances=[
+                {"content": f"{context}\n\n{prompt}"}
+            ]
         )
         
-        return response.choices[0].message['content']
+        # Assuming response is structured correctly
+        return response.predictions[0]['content']
     except Exception as e:
         return f"An error occurred: {str(e)}"
 
@@ -84,7 +83,7 @@ def main():
 
         with st.chat_message("assistant"):
             message_placeholder = st.empty()
-            full_response = chat_with_gpt(prompt, context)
+            full_response = chat_with_gemini(prompt, context)
             message_placeholder.markdown(full_response)
         st.session_state.messages.append({"role": "assistant", "content": full_response})
 
