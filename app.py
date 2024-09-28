@@ -6,7 +6,7 @@ import tempfile
 import requests
 
 # Set up the Gemini API key
-os.environ["GEMINI_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY"  # Replace with your Gemini API key
+os.environ["GEMINI_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"  # Replace with your Gemini API key
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -19,12 +19,12 @@ def extract_text(file):
     if file.name.endswith('.pdf'):
         pdf_reader = PdfReader(file)
         for page in pdf_reader.pages:
-            text += page.extract_text()
+            text += page.extract_text() or ""  # Handle None if extraction fails
     elif file.name.endswith('.docx'):
         doc = docx.Document(file)
         for para in doc.paragraphs:
             text += para.text + "\n"
-    return text
+    return text.strip()  # Remove any extra whitespace
 
 def save_file(file):
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[1]) as tmp_file:
@@ -34,18 +34,20 @@ def save_file(file):
 def chat_with_gemini(prompt, context=""):
     try:
         # Prepare the request to the Gemini API
-        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY"  # Replace with your Gemini API endpoint
+        endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"  # Replace with your endpoint
+        params = {"key": os.environ["GEMINI_API_KEY"]}
         headers = {
-            "Authorization": f"Bearer {os.environ['AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNUY']}",
+            "Authorization": f"Bearer {os.environ['GEMINI_API_KEY']}",
             "Content-Type": "application/json"
         }
         data = {
             "prompt": f"{context}\n\n{prompt}",
-            "max_tokens": 100  # Adjust as necessary
+            "max_tokens": 150,  # Adjust as necessary
+            "temperature": 0.7,  # Adjust temperature for response variability
         }
 
         # Call the Gemini API
-        response = requests.post(endpoint, headers=headers, json=data)
+        response = requests.post(endpoint, headers=headers, params=params, json=data)
 
         # Check for a successful response
         if response.status_code == 200:
