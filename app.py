@@ -6,7 +6,7 @@ import tempfile
 import requests
 
 # Set up the Gemini API key
-os.environ["GEMINI_API_KEY"] = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"  # Replace with your Gemini API key
+GEMINI_API_KEY = "AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU"  # Replace with your Gemini API key
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -35,9 +35,8 @@ def chat_with_gemini(prompt, context=""):
     try:
         # Prepare the request to the Gemini API
         endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"  # Replace with your endpoint
-        params = {"key": os.environ["GEMINI_API_KEY"]}
         headers = {
-            "Authorization": f"Bearer {os.environ['GEMINI_API_KEY']}",
+            "Authorization": f"Bearer {GEMINI_API_KEY}",  # Directly use the API key
             "Content-Type": "application/json"
         }
         data = {
@@ -47,7 +46,7 @@ def chat_with_gemini(prompt, context=""):
         }
 
         # Call the Gemini API
-        response = requests.post(endpoint, headers=headers, params=params, json=data)
+        response = requests.post(endpoint, headers=headers, json=data)
 
         # Check for a successful response
         if response.status_code == 200:
