@@ -33,17 +33,23 @@ def save_file(file):
         return tmp_file.name
 
 def get_access_token():
-    credentials = service_account.Credentials.from_service_account_file(
-        SERVICE_ACCOUNT_FILE,
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-    access_token_info = credentials.refresh(requests.Request())
-    return access_token_info.token
+    try:
+        credentials = service_account.Credentials.from_service_account_file(
+            SERVICE_ACCOUNT_FILE,
+            scopes=["https://www.googleapis.com/auth/cloud-platform"],
+        )
+        access_token_info = credentials.refresh(requests.Request())
+        return access_token_info.token
+    except Exception as e:
+        st.error(f"Failed to obtain access token: {str(e)}")
+        return None
 
 def chat_with_gemini(prompt, context=""):
-    try:
-        access_token = get_access_token()  # Get the OAuth 2.0 access token
+    access_token = get_access_token()  # Get the OAuth 2.0 access token
+    if not access_token:
+        return "Failed to get access token."
 
+    try:
         # Prepare the request to the Gemini API
         endpoint = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"  # Replace with your endpoint
         headers = {
@@ -65,7 +71,7 @@ def chat_with_gemini(prompt, context=""):
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
-        return f"An error occurred: {str(e)}"
+        return f"An error occurred during API call: {str(e)}"
 
 def main():
     st.set_page_config(page_title="Assignment Submission Chatbot", page_icon="📚", layout="wide")
