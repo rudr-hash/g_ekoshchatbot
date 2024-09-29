@@ -6,7 +6,7 @@ import tempfile
 import requests
 
 # Your Gemini API key
-API_KEY = 'YOUR_API_KEY_HERE'  # Replace this with your actual API key
+API_KEY = 'AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU'  # Replace this with your actual API key
 
 # Initialize session state
 if "messages" not in st.session_state:
