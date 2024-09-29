@@ -15,6 +15,9 @@ if "files" not in st.session_state:
     st.session_state.files = {}
 
 def extract_text(file):
+    """
+    Extract text from PDF or DOCX files.
+    """
     text = ""
     if file.name.endswith('.pdf'):
         pdf_reader = PdfReader(file)
@@ -27,21 +30,32 @@ def extract_text(file):
     return text.strip()  # Remove any extra whitespace
 
 def save_file(file):
+    """
+    Save uploaded files to a temporary directory.
+    """
     with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[1]) as tmp_file:
         tmp_file.write(file.getvalue())
         return tmp_file.name
 
 def chat_with_gemini(prompt, context=""):
+    """
+    Send a prompt along with the context to the Gemini API and return the response.
+    """
     try:
         # Prepare the request to the Gemini API
-        endpoint = f"https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.5-flash:generateMessage?key={API_KEY}"
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
         headers = {
             "Content-Type": "application/json"
         }
         data = {
-            "messages": [
-                {"author": "system", "content": "You are a helpful assistant."},
-                {"author": "user", "content": f"{context}\n\n{prompt}"}
+            "contents": [
+                {
+                    "parts": [
+                        {
+                            "text": f"{context}\n\n{prompt}"
+                        }
+                    ]
+                }
             ]
         }
 
@@ -52,12 +66,14 @@ def chat_with_gemini(prompt, context=""):
         if response.status_code == 200:
             # Extract the text in a readable format
             response_json = response.json()
-            messages = response_json.get("candidates", [])
-            if messages:
-                # Extract only relevant text and format it
-                text = messages[0].get("content", "No response text found.")
-                return format_response(text)
-            return "No relevant response text found."
+            contents = response_json.get("contents", [])
+            if contents:
+                parts = contents[0].get("parts", [])
+                if parts:
+                    # Get the relevant response text and format it
+                    text = parts[0].get("text", "No response text found.")
+                    return format_response(text)
+            return "No relevant response text found in the API response."
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
@@ -65,13 +81,13 @@ def chat_with_gemini(prompt, context=""):
 
 def format_response(text):
     """
-    Format the API response text to be human-readable.
+    Format the response text to be more human-readable.
     """
     # Split text into sentences for better readability and structure the response
     sentences = text.split('. ')
     formatted_text = ""
     
-    # Clean and structure the response by filtering out irrelevant parts
+    # Clean and structure the response by bullet-pointing the sentences
     for sentence in sentences:
         cleaned_sentence = sentence.strip()
         if len(cleaned_sentence) > 0:  # Only keep non-empty sentences
