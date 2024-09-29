@@ -49,15 +49,14 @@ def chat_with_gemini(prompt, context=""):
         }
         data = {
             "contents": [
-                {
-                    "parts": [
+               
                         {
                             "text": f"{context}\n\n{prompt}"
                         }
                     ]
                 }
-            ]
-        }
+            
+        
 
         # Call the Gemini API
         response = requests.post(endpoint, headers=headers, json=data)
