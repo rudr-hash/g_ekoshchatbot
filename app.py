@@ -4,43 +4,53 @@ from PyPDF2 import PdfReader
 import docx
 import tempfile
 import requests
+import json
 
 # Your Gemini API key
-API_KEY = 'AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU'  # Replace this with your actual API key
+API_KEY = 'AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU'  # Replace with your actual API key
 
 # Initialize session state
 if "messages" not in st.session_state:
     st.session_state.messages = []
 if "files" not in st.session_state:
     st.session_state.files = {}
+if "current_course" not in st.session_state:
+    st.session_state.current_course = None
+
+# Mock course data
+COURSES = {
+    "Business Consulting - DIV B": {
+        "assignments": [
+            {
+                "name": "Revised Business proposal and Defence",
+                "due_date": "2024-09-18 11:55 PM",
+                "status": "Not submitted",
+                "requirements": "Submit a 10-page business proposal and prepare a 15-minute defense presentation."
+            }
+        ]
+    },
+    "Negotiation Skills - DIV B": {
+        "assignments": [
+            {
+                "name": "Case Study Analysis",
+                "due_date": "2024-10-01 11:59 PM",
+                "status": "Not started",
+                "requirements": "Analyze the provided case study and submit a 5-page report on negotiation strategies."
+            }
+        ]
+    }
+}
 
 def extract_text(file):
-    """
-    Extract text from PDF or DOCX files.
-    """
-    text = ""
-    if file.name.endswith('.pdf'):
-        pdf_reader = PdfReader(file)
-        for page in pdf_reader.pages:
-            text += page.extract_text() or ""
-    elif file.name.endswith('.docx'):
-        doc = docx.Document(file)
-        for para in doc.paragraphs:
-            text += para.text + "\n"
-    return text.strip()
+    # (Keep the existing extract_text function)
+    ...
 
 def save_file(file):
-    """
-    Save uploaded files to a temporary directory.
-    """
-    with tempfile.NamedTemporaryFile(delete=False, suffix=os.path.splitext(file.name)[1]) as tmp_file:
-        tmp_file.write(file.getvalue())
-        return tmp_file.name
+    # (Keep the existing save_file function)
+    ...
 
 def chat_with_gemini(prompt, context=""):
-    """
-    Send a prompt along with the context to the Gemini API and return the response.
-    """
+    # (Update the existing chat_with_gemini function to include more context)
     try:
         endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
         headers = {
@@ -50,7 +60,11 @@ def chat_with_gemini(prompt, context=""):
             "contents": [
                 {
                     "parts": [
-                        {"text": f"Context: {context}\n\nUser: {prompt}\n\nAssistant:"}
+                        {"text": f"Context: You are an AI assistant for the Moodle ekosh assignment submission system. "
+                                 f"Current course: {st.session_state.current_course}\n"
+                                 f"Course information: {json.dumps(COURSES.get(st.session_state.current_course, {}))}\n"
+                                 f"User question: {prompt}\n\n"
+                                 f"Please provide a helpful response based on the context and user question."}
                     ]
                 }
             ]
@@ -70,41 +84,72 @@ def chat_with_gemini(prompt, context=""):
         return f"An error occurred during API call: {str(e)}"
 
 def main():
-    st.set_page_config(page_title="Assignment Submission Chatbot", page_icon="📚", layout="wide")
+    st.set_page_config(page_title="ekosh Assignment Assistant", page_icon="📚", layout="wide")
     
-    st.title("📚 Assignment Submission Chatbot")
-    st.markdown("Welcome! Upload your assignments and let's chat about them.")
+    # Custom CSS to match Moodle ekosh style
+    st.markdown("""
+    <style>
+    .stApp {
+        background-color: #f0f0f0;
+    }
+    .stSidebar {
+        background-color: #4a0e4e;
+        color: white;
+    }
+    .stButton>button {
+        background-color: #4a0e4e;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
+    # Top navigation bar
+    st.markdown("""
+    <div style="background-color: #4a0e4e; padding: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <span style="color: white; font-size: 24px;">📚 ekosh Assignment Assistant</span>
+        <span style="color: white;">Rudresh Dahiya</span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Sidebar for course selection
     with st.sidebar:
-        st.header("📤 File Upload")
-        uploaded_file = st.file_uploader("Choose a file (PDF or DOCX)", type=['pdf', 'docx'])
-        if uploaded_file is not None:
-            file_text = extract_text(uploaded_file)
-            file_path = save_file(uploaded_file)
-            st.session_state.files[uploaded_file.name] = {"path": file_path, "text": file_text}
-            st.success(f"Great! I've uploaded '{uploaded_file.name}' for you.")
+        st.header("📁 Your Courses")
+        for course in COURSES.keys():
+            if st.button(course):
+                st.session_state.current_course = course
 
-        st.header("📁 Your Files")
-        for filename in st.session_state.files:
-            st.write(f"- {filename}")
+    # Main content area
+    if st.session_state.current_course:
+        st.subheader(f"💬 {st.session_state.current_course} Assistant")
+        
+        # Display assignments for the current course
+        course_data = COURSES[st.session_state.current_course]
+        for assignment in course_data["assignments"]:
+            st.markdown(f"""
+            <div style="background-color: white; padding: 10px; margin: 10px 0; border-radius: 5px;">
+                <h3>{assignment['name']}</h3>
+                <p>Due: {assignment['due_date']}</p>
+                <p>Status: {assignment['status']}</p>
+            </div>
+            """, unsafe_allow_html=True)
 
-    st.header("💬 Let's Chat About Your Assignments")
-    for message in st.session_state.messages:
-        with st.chat_message(message["role"]):
-            st.markdown(message["content"])
+        # Chat interface
+        for message in st.session_state.messages:
+            with st.chat_message(message["role"]):
+                st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ask me anything about your assignments..."):
-        st.session_state.messages.append({"role": "user", "content": prompt})
-        with st.chat_message("user"):
-            st.markdown(prompt)
+        if prompt := st.chat_input("Ask me about your assignments..."):
+            st.session_state.messages.append({"role": "user", "content": prompt})
+            with st.chat_message("user"):
+                st.markdown(prompt)
 
-        context = "\n\n".join([f"File: {filename}\nContent: {fileinfo['text'][:500]}..." for filename, fileinfo in st.session_state.files.items()])
-
-        with st.chat_message("assistant"):
-            message_placeholder = st.empty()
-            full_response = chat_with_gemini(prompt, context)
-            message_placeholder.markdown(full_response)
-        st.session_state.messages.append({"role": "assistant", "content": full_response})
+            with st.chat_message("assistant"):
+                message_placeholder = st.empty()
+                full_response = chat_with_gemini(prompt)
+                message_placeholder.markdown(full_response)
+            st.session_state.messages.append({"role": "assistant", "content": full_response})
+    else:
+        st.info("Please select a course from the sidebar to begin.")
 
 if __name__ == "__main__":
     main()
