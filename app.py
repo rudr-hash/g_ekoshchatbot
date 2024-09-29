@@ -68,7 +68,7 @@ def chat_with_gemini(prompt, context=""):
             st.write("Full API Response:", response_json)  # Log full response for debugging
             contents = response_json.get("contents", [])
             if contents:
-                parts = contents[0].get("parts", [])
+                parts = contents[0].get("text", [])
                 if parts:
                     # Get the relevant response text
                     text = parts[0].get("text", "")
