@@ -6,7 +6,7 @@ import tempfile
 import requests
 
 # Your Gemini API key
-API_KEY = 'AIzaSyCr8niD4_LvntSAdd8apKnFC9uMZK5WeNU'  # Replace this with your actual API key
+API_KEY = 'YOUR_API_KEY_HERE'  # Replace this with your actual API key
 
 # Initialize session state
 if "messages" not in st.session_state:
@@ -22,12 +22,12 @@ def extract_text(file):
     if file.name.endswith('.pdf'):
         pdf_reader = PdfReader(file)
         for page in pdf_reader.pages:
-            text += page.extract_text() or ""  # Handle None if extraction fails
+            text += page.extract_text() or ""
     elif file.name.endswith('.docx'):
         doc = docx.Document(file)
         for para in doc.paragraphs:
             text += para.text + "\n"
-    return text.strip()  # Remove any extra whitespace
+    return text.strip()
 
 def save_file(file):
     """
@@ -42,67 +42,39 @@ def chat_with_gemini(prompt, context=""):
     Send a prompt along with the context to the Gemini API and return the response.
     """
     try:
-        # Prepare the request to the Gemini API
         endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
         headers = {
             "Content-Type": "application/json"
         }
         data = {
             "contents": [
-               
-                        {
-                            "text": f"{context}\n\n{prompt}"
-                        }
+                {
+                    "parts": [
+                        {"text": f"Context: {context}\n\nUser: {prompt}\n\nAssistant:"}
                     ]
                 }
-            
-        
+            ]
+        }
 
-        # Call the Gemini API
         response = requests.post(endpoint, headers=headers, json=data)
 
-        # Check for a successful response
         if response.status_code == 200:
-            # Extract the text in a readable format
             response_json = response.json()
-            st.write("Full API Response:", response_json)  # Log full response for debugging
-            contents = response_json.get("contents", [])
+            contents = response_json.get("candidates", [{}])[0].get("content", {}).get("parts", [])
             if contents:
-                parts = contents[0].get("text", [])
-                if parts:
-                    # Get the relevant response text
-                    text = parts[0].get("text", "")
-                    if text:
-                        return format_response(text)
+                return contents[0].get("text", "I couldn't generate a response. Please try again.")
             return "No relevant response text found in the API response."
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
         return f"An error occurred during API call: {str(e)}"
 
-def format_response(text):
-    """
-    Format the response text to be more human-readable.
-    """
-    # Split text into sentences for better readability and structure the response
-    sentences = text.split('. ')
-    formatted_text = ""
-    
-    # Clean and structure the response by bullet-pointing the sentences
-    for sentence in sentences:
-        cleaned_sentence = sentence.strip()
-        if len(cleaned_sentence) > 0:  # Only keep non-empty sentences
-            formatted_text += f"- {cleaned_sentence}.\n\n"  # Bullet-point format for better readability
-    
-    return formatted_text
-
 def main():
     st.set_page_config(page_title="Assignment Submission Chatbot", page_icon="📚", layout="wide")
     
     st.title("📚 Assignment Submission Chatbot")
-    st.markdown("Welcome to the Assignment Submission Chatbot! Upload your assignments and chat about them.")
+    st.markdown("Welcome! Upload your assignments and let's chat about them.")
 
-    # Sidebar for file upload
     with st.sidebar:
         st.header("📤 File Upload")
         uploaded_file = st.file_uploader("Choose a file (PDF or DOCX)", type=['pdf', 'docx'])
@@ -110,24 +82,22 @@ def main():
             file_text = extract_text(uploaded_file)
             file_path = save_file(uploaded_file)
             st.session_state.files[uploaded_file.name] = {"path": file_path, "text": file_text}
-            st.success(f"File uploaded: {uploaded_file.name}")
+            st.success(f"Great! I've uploaded '{uploaded_file.name}' for you.")
 
-        st.header("📁 Uploaded Files")
+        st.header("📁 Your Files")
         for filename in st.session_state.files:
-            st.write(filename)
+            st.write(f"- {filename}")
 
-    # Main chat interface
-    st.header("💬 Chat")
+    st.header("💬 Let's Chat About Your Assignments")
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    if prompt := st.chat_input("Ask about your assignments..."):
+    if prompt := st.chat_input("Ask me anything about your assignments..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Prepare context from uploaded files
         context = "\n\n".join([f"File: {filename}\nContent: {fileinfo['text'][:500]}..." for filename, fileinfo in st.session_state.files.items()])
 
         with st.chat_message("assistant"):
