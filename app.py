@@ -39,15 +39,9 @@ def chat_with_gemini(prompt, context=""):
             "Content-Type": "application/json"
         }
         data = {
-            "contents": [
-                {
-                    "parts": [
-                        {
-                            "text": f"{context}\n\n{prompt}"
-                        }
-                    ]
-                }
-            ]
+            "prompt": {
+                "text": f"{context}\n\n{prompt}"
+            }
         }
 
         # Call the Gemini API
@@ -55,22 +49,16 @@ def chat_with_gemini(prompt, context=""):
 
         # Check for a successful response
         if response.status_code == 200:
-            # Get the full response JSON
-            response_json = response.json()
-            
-            # Log the full response to debug the structure
-            st.write("Full API Response:", response_json)
-
             # Extract the text in a readable format
+            response_json = response.json()
             contents = response_json.get("contents", [])
             if contents:
                 parts = contents[0].get("parts", [])
                 if parts:
-                    # Making the response more human-readable by formatting it
+                    # Extract only relevant text and format it
                     text = parts[0].get("text", "No response text found.")
-                    formatted_response = format_response(text)
-                    return formatted_response
-            return "No response text found in the API response."
+                    return format_response(text)
+            return "No relevant response text found."
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
@@ -78,14 +66,17 @@ def chat_with_gemini(prompt, context=""):
 
 def format_response(text):
     """
-    Function to format the raw response text into something more human-readable.
-    Here, you can apply simple formatting such as bullet points, headings, or paragraph spacing.
+    Format the API response text to be human-readable.
     """
-    # Split text into sentences for readability and structure the response
+    # Split text into sentences for better readability and structure the response
     sentences = text.split('. ')
     formatted_text = ""
+    
+    # Clean and structure the response by filtering out irrelevant parts
     for sentence in sentences:
-        formatted_text += f"- {sentence.strip()}.\n\n"
+        cleaned_sentence = sentence.strip()
+        if len(cleaned_sentence) > 0:  # Only keep non-empty sentences
+            formatted_text += f"- {cleaned_sentence}.\n\n"  # Bullet-point format for better readability
     
     return formatted_text
 
