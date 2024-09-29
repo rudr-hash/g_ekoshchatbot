@@ -66,13 +66,15 @@ def chat_with_gemini(prompt, context=""):
         if response.status_code == 200:
             # Extract the text in a readable format
             response_json = response.json()
+            st.write("Full API Response:", response_json)  # Log full response for debugging
             contents = response_json.get("contents", [])
             if contents:
                 parts = contents[0].get("parts", [])
                 if parts:
-                    # Get the relevant response text and format it
-                    text = parts[0].get("text", "No response text found.")
-                    return format_response(text)
+                    # Get the relevant response text
+                    text = parts[0].get("text", "")
+                    if text:
+                        return format_response(text)
             return "No relevant response text found in the API response."
         else:
             return f"Error: {response.status_code} - {response.text}"
