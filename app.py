@@ -61,17 +61,33 @@ def chat_with_gemini(prompt, context=""):
             # Log the full response to debug the structure
             st.write("Full API Response:", response_json)
 
-            # Try to extract the text
+            # Extract the text in a readable format
             contents = response_json.get("contents", [])
             if contents:
                 parts = contents[0].get("parts", [])
                 if parts:
-                    return parts[0].get("text", "No response text found.")
+                    # Making the response more human-readable by formatting it
+                    text = parts[0].get("text", "No response text found.")
+                    formatted_response = format_response(text)
+                    return formatted_response
             return "No response text found in the API response."
         else:
             return f"Error: {response.status_code} - {response.text}"
     except Exception as e:
         return f"An error occurred during API call: {str(e)}"
+
+def format_response(text):
+    """
+    Function to format the raw response text into something more human-readable.
+    Here, you can apply simple formatting such as bullet points, headings, or paragraph spacing.
+    """
+    # Split text into sentences for readability and structure the response
+    sentences = text.split('. ')
+    formatted_text = ""
+    for sentence in sentences:
+        formatted_text += f"- {sentence.strip()}.\n\n"
+    
+    return formatted_text
 
 def main():
     st.set_page_config(page_title="Assignment Submission Chatbot", page_icon="📚", layout="wide")
