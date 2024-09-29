@@ -34,14 +34,15 @@ def save_file(file):
 def chat_with_gemini(prompt, context=""):
     try:
         # Prepare the request to the Gemini API
-        endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={API_KEY}"
+        endpoint = f"https://generativelanguage.googleapis.com/v1beta2/models/gemini-1.5-flash:generateMessage?key={API_KEY}"
         headers = {
             "Content-Type": "application/json"
         }
         data = {
-            "prompt": {
-                "text": f"{context}\n\n{prompt}"
-            }
+            "messages": [
+                {"author": "system", "content": "You are a helpful assistant."},
+                {"author": "user", "content": f"{context}\n\n{prompt}"}
+            ]
         }
 
         # Call the Gemini API
@@ -51,13 +52,11 @@ def chat_with_gemini(prompt, context=""):
         if response.status_code == 200:
             # Extract the text in a readable format
             response_json = response.json()
-            contents = response_json.get("contents", [])
-            if contents:
-                parts = contents[0].get("parts", [])
-                if parts:
-                    # Extract only relevant text and format it
-                    text = parts[0].get("text", "No response text found.")
-                    return format_response(text)
+            messages = response_json.get("candidates", [])
+            if messages:
+                # Extract only relevant text and format it
+                text = messages[0].get("content", "No response text found.")
+                return format_response(text)
             return "No relevant response text found."
         else:
             return f"Error: {response.status_code} - {response.text}"
